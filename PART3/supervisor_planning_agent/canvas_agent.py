@@ -177,5 +177,59 @@ agent = create_agent(
     
     작업 프로세스:
     1. 먼저 이전 메시지에서 research_agent의 조사 결과를 확인
-    2. create_outline_from_research 도구로 조사 결과 기반 목차 작성"""
+    2. create_outline_from_research 도구로 조사 결과 기반 목차 작성
+    3. write_content_from_research 도구로 목차에 맞춰 **Markdown 형식**의 완성된 글 작성
+    4. save_to_file 도구로 .md 파일 저장 (파일명에 확장자가 없으면 자동으로 .md 추가됨)
+    
+    Markdown 작성 가이드:
+    - 제목: # (h1), ## (h2), ### (h3)
+    - 강조: **굵게**, *기울임*
+    - 링크: [텍스트](URL)
+    - 목록: -, *, 1.
+    - 인용: > 텍스트
+    - 코드: `인라인 코드`, ```언어 블록 코드```
+    - 구분선: ---
+    - 출처는 Markdown 링크 형식으로: [출처명](URL)
+    
+    중요 사항:
+    - 반드시 이전 메시지 히스토리에서 research_agent의 조사 결과를 찾아서 활용하세요
+    - 조사 결과으 출처 URL을 **Markdown 링크 형식**으로 반드시 포함하세요
+    - 목차와 내용이 일관성 있게 연결되도록 하세요
+    - 모든 문서는 **Markdown 문법**을 활용하여 가독성 높게 작성하세요
+    - 파일명은 의미 있는 한글 또는 영문으로 작성 (예: 'AI_보고서.md', '시장조사_결과.md')
+    - 작업이 완료되면 즉시 종료하세요""",
 )
+
+def canvas_node(state) -> Command[Literal["supervisor"]]:
+    """Canvas 에이전트 노드"""
+
+    messages = state.get("messages", [])
+
+    research_results = []
+    for msg in messages:
+        if hasattr(msg, 'name') and msg.name == "research_agent":
+            research_results.append(msg.content)
+
+    if research_results:
+        context_info = "\n\n=== 이전 작업 결과 (Research Agent) ===\n" + "\n---\n".join(research_results)
+
+        # 현재 작업 메시지에 컨텍스트 추가
+        enhanced_message = SystemMessage(
+            content=f"Canvas Agnet 작업 시작\n{context_info}\n\n위 조사 결과를 바탕으로 글을 작성해주세요."
+        )
+
+        enhanced_state = {
+            **state,
+            "messages": state["messages"] + [enhanced_message]
+        }
+
+        result = agent.invoke(enhanced_state)
+    else:
+        result = agent.invoke(state)
+
+    result["messages"][-1].name = "canvas_agent"
+
+    return Command(
+        goto="supervisor",
+        update={"messages": result["messages"]}
+    )
