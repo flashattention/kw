@@ -5,7 +5,7 @@ from langchain.tools import tool
 from langchain.agents import create_agent
 from langgraph.types import Command
 from langchain_core.messages import SystemMessage
-from settings import get_model
+from settings import get_model, complete_step
 from datetime import datetime
 
 @tool
@@ -231,5 +231,5 @@ def canvas_node(state) -> Command[Literal["supervisor"]]:
 
     return Command(
         goto="supervisor",
-        update={"messages": result["messages"]}
+        update={"messages": result["messages"], **complete_step(state, result["messages"][-1].content)}
     )

@@ -3,7 +3,7 @@ from langchain.agents import create_agent
 from langgraph.types import Command
 from langchain_tavily import TavilySearch
 
-from settings import get_model, State
+from settings import get_model, complete_step, State
 
 tavily_search = TavilySearch(max_results=3)
 agent = create_agent(
@@ -26,5 +26,5 @@ def research_node(state:State) -> Command[Literal["supervisor"]]:
 
     return Command(
         goto="supervisor",
-        update={"messages": result["messages"]}
+        update={"messages": result["messages"], **complete_step(state, result["messages"][-1].content)}
     )
