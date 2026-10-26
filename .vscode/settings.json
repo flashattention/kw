@@ -1,4 +1,6 @@
 {
     "liveServer.settings.port": 5501,
-    "python.terminal.useEnvFile": true
+    "python.terminal.useEnvFile": true,
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "pylint.interpreter": ["${workspaceFolder}/.venv/bin/python"]
 }
